@@ -1,0 +1,74 @@
+--podaj wszyskich klientów którzy zamawiali produkty w pude³kach i s¹ z londynu
+
+SELECT  C.CompanyName
+		,COUNT(O.OrderID)
+FROM [Products] P join [Order Details] OD on P.ProductID = OD.ProductID
+					join [Orders] O on OD.OrderID = O.OrderID
+					join [Customers] C on O.CustomerID = C.CustomerID
+where P.QuantityPerUnit like '%box%' AND C.City like 'London'
+GROUP BY C.CompanyName
+
+--podaj który spedytor obs³u¿y³ najwiêcej zamówien
+
+SELECT TOP 1 S.CompanyName
+		,COUNT(O.OrderID)
+FROM Shippers S join Orders O on S.ShipperID = O.ShipVia
+GROUP BY S.CompanyName
+ORDER BY 2 DESC
+
+--który dostawca dostarczy³ najwiêcej zamówieñ i do jakiego kraju?
+SELECT TOP 1 WITH TIES COUNT(S.SupplierID) as 'id dostawcy'
+			,COUNT(O.OrderID) as 'nr zamowiania'
+
+FROM Suppliers S JOIN Products P on S.SupplierID = P.SupplierID
+				JOIN [Order Details] OD on P.ProductID = OD.ProductID
+				JOIN Orders O on OD.OrderID = O.OrderID
+GROUP BY S.SupplierID, O.ShipCountry
+ORDER BY S.SupplierID
+
+--które zamówienia by³y spóŸnione o ile dni
+
+select OrderID as 'ID  spozionego zamowienia zamowienia'
+    ,cast(RequiredDate - ShippedDate as int) as 'ilosc dni spoznienia'
+from Orders
+where RequiredDate > ShippedDate
+order by cast(ShippedDate - RequiredDate as int)
+
+-- jaki procent zamówieñ stanowi³ dany produkt w roku 1998
+
+SELECT P.ProductName
+		,(COUNT(P.ProductID)* 100.)/
+		(
+		SELECT
+			(COUNT(OrderID))
+			FROM Orders
+			WHERE YEAR(OrderDate) = 1998
+		) as '%'
+FROM Products P JOIN [Order Details] OD ON P.ProductID = OD.ProductID
+				JOIN Orders O ON OD.OrderID = O.OrderID
+WHERE YEAR(O.OrderDate) = 1998
+GROUP BY P.ProductName
+ORDER BY (COUNT(P.ProductID)*100. )/
+		(
+		SELECT
+			(COUNT(OrderID))
+			FROM Orders
+			WHERE YEAR(OrderDate) = 1998
+		) DESC
+
+--wszystkie produkty w s³oikach o okreœlonej cenie od danych dostawców
+select top 100 percent *
+from Products
+where (QuantityPerUnit like ('%jar%')) and (UnitPrice >=20 and
+ UnitPrice <= 40) and (SupplierID = 2 or SupplierID = 3)
+order by UnitsInStock desc
+
+--wszystkie zamówienia z Francji oraz Niemiec dostarczone do miast na literê L
+
+select top 100 percent *
+from Orders
+where (ShipCountry like ('France') or ShipCountry like ('Germany'))
+  and ShipCity like ('L%') and ShippedDate is not null
+order by OrderDate asc
+
+

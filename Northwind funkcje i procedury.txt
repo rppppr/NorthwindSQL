@@ -1,0 +1,32 @@
+GO
+CREATE PROCEDURE obnizka
+    @nr_kategorii varchar(50),
+    @obnizka float
+AS
+BEGIN
+    DECLARE @cena float
+    SELECT @cena = (P.UnitPrice * @obnizka) FROM Products P JOIN Categories C ON P.CategoryID = C.CategoryID
+                                            WHERE @nr_kategorii LIKE C.CategoryName
+    PRINT @cena
+END
+
+EXEC obnizka 8, 5
+EXEC obnizka 7, 5
+
+SELECT UnitPrice,ProductName FROM Products
+
+CREATE FUNCTION dbo.Silnia ( @liczba int )
+RETURNS INT
+AS
+BEGIN
+DECLARE @n int
+
+    IF @liczba <= 1
+        SET @n = 1
+    ELSE
+        SET @n = @liczba * dbo.Silnia( @liczba - 1 )
+RETURN (@n)
+END
+
+EXEC dbo.Silnia('20')
+GO
